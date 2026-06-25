@@ -1,10 +1,10 @@
-from json import decoder
 import json
 import matplotlib.pyplot as plt
 from PIL import Image
 import os
 import cv2
 import matplotlib.patches as patches
+import numpy as np
 
 class IndustrialEDA:
     def __init__(self, annotation_path, image_dir=None):
@@ -26,13 +26,17 @@ class IndustrialEDA:
             
         return cat_counts
     
-    def visualize_some_images(self, n_samples=5):
+    def get_full_path(self):
         image_path = {}
         for root, directories, files in os.walk(self.image_dir):
             for file_name in files:
                 if file_name.lower().endswith(('.jpg', 'jpeg', '.png')):
                     image_path[file_name] = os.path.join(root, file_name)
+        return image_path
+    
+    def visualize_some_images(self, n_samples=5):
 
+        image_path = self.get_full_path()
         show = 0
         for annotation in self.coco_data["annotations"]:
             if show >= 5:
@@ -55,13 +59,54 @@ class IndustrialEDA:
             rect = patches.Rectangle(xy=(x, y), width=w, height=h, linewidth=2, edgecolor="r", facecolor="none")
             ax.add_patch(rect)
 
-            print(x, y, w, h)
             plt.show()
             show += 1
+    
+    def resolution_distribution(self):
+        resolution_map = {}
+        for annotation in self.coco_data["images"]:
+            if (annotation["width"], annotation["height"]) in resolution_map:
+                resolution_map[(annotation["width"], annotation["height"])] += 1
+            else: 
+                resolution_map[(annotation["width"], annotation["height"])] = 1
+        return resolution_map
+
+    def analyze_image_quality(self):
+        image_path = self.get_full_path()
+
+        brightness_list = []
+        contrast_list = []
+        blurrieness_list = []
+        file_names = []
+        for image_info in self.coco_data["images"]:
+            file_name = image_info["file_name"]
+            full_path = image_path.get(file_name)
+
+            # Nhằm việc chuyển đổi RGB sang Gray scale để tránh tính toán nhiều,
+            # tránh gây nhiễu bởi độ sáng Gray = 0.299R + 0.587G + 0.114B
+            image_gray = cv2.imread(full_path, cv2.IMREAD_GRAYSCALE)
+            
+            brightness = np.mean(image_gray)
+            contrast = np.std(image_gray)
+            laplacian_var = cv2.Laplacian(image_gray, cv2.CV_64F).var()
+
+            brightness_list.append(brightness)
+            contrast_list.append(contrast)
+            blurrieness_list.append(laplacian_var)
+            file_names.append(file_name)
+            
+            return {
+                "file_name": file_names,
+                "brightness": brightness_list,
+                "contrast": contrast_list,
+                "blurrieness": blurrieness_list
+            }
+
             
 
 if __name__ == "__main__":
     eda = IndustrialEDA("/Users/mac/Detect_Drill_Bit/mui_khoan/train/_annotations.coco.json", "/Users/mac/Detect_Drill_Bit/mui_khoan/train")
-    print(eda.coco_data.keys())
-    eda.get_class_distribution()
-    eda.visualize_some_images()
+    print("categories: ", eda.get_class_distribution())
+    # eda.visualize_some_images()
+    print(eda.resolution_distribution())
+    print(eda.analyze_image_quality())
