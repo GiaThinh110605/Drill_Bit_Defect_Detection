@@ -86,8 +86,13 @@ class IndustrialEDA:
             # tránh gây nhiễu bởi độ sáng Gray = 0.299R + 0.587G + 0.114B
             image_gray = cv2.imread(full_path, cv2.IMREAD_GRAYSCALE)
             
+            # độ sáng = trung bình của từng pixel trong ảnh
             brightness = np.mean(image_gray)
+            # độ tương phản = độ lệch chuẩn của từng pixel trong ảnh
             contrast = np.std(image_gray)
+            # độ mờ = đọ hàm bậc 2 của ảnh, sau đó lấy phương sai(độ phân tán của bức ảnh) 
+            # ảnh sắc nét: có nhiều cạnh rõ ràng -> phương sai rất cao
+            # ảnh bị nhòe/mờ: các cạnh bị mịn hóa, thay đổi độ sáng diễn ra từ từ -> phương sai rất thấp
             laplacian_var = cv2.Laplacian(image_gray, cv2.CV_64F).var()
 
             brightness_list.append(brightness)
@@ -102,6 +107,24 @@ class IndustrialEDA:
                 "blurrieness": blurrieness_list
             }
 
+    def plot_quality_distribution(self, metrics):
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        
+        axes[0].hist(metrics["brightness"], bins=20, color="gold", edgecolor="black")
+        axes[0].set_title("Phân phối độ sáng")
+        axes[0].set_xlabel("Giá trị trung bình pixel (0-255)")
+        axes[0].set_ylabel("Số lượng ảnh")
+
+        axes[1].hist(metrics["contrast"], bins=20, color="gold", edgecolor="black")
+        axes[1].set_title("Phân phối độ tương phản")
+        axes[1].set_xlabel("Độ tương phản")
+        axes[1].set_ylabel("Số lượng ảnh")
+
+        axes[2].hist(metrics["blurrieness"], bins=20, color="gold", edgecolor="black")
+        axes[2].set_title("Phân phối độ mờ")
+        axes[2].set_xlabel("Độ mờ")
+        axes[2].set_ylabel("Số lượng ảnh")
+        plt.show()
             
 
 if __name__ == "__main__":
@@ -109,4 +132,5 @@ if __name__ == "__main__":
     print("categories: ", eda.get_class_distribution())
     # eda.visualize_some_images()
     print(eda.resolution_distribution())
-    print(eda.analyze_image_quality())
+    metrics = eda.analyze_image_quality()
+    eda.plot_quality_distribution(metrics)
