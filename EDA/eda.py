@@ -34,12 +34,12 @@ class IndustrialEDA:
                     image_path[file_name] = os.path.join(root, file_name)
         return image_path
     
-    def visualize_some_images(self, n_samples=5):
+    def visualize_some_images(self, n_samples=10):
 
         image_path = self.get_full_path()
         show = 0
         for annotation in self.coco_data["annotations"]:
-            if show >= 5:
+            if show >= n_samples:
                 break
             image_id = annotation["image_id"]
             
@@ -85,7 +85,9 @@ class IndustrialEDA:
             # Nhằm việc chuyển đổi RGB sang Gray scale để tránh tính toán nhiều,
             # tránh gây nhiễu bởi độ sáng Gray = 0.299R + 0.587G + 0.114B
             image_gray = cv2.imread(full_path, cv2.IMREAD_GRAYSCALE)
-            
+            if image_gray is None:
+                continue
+
             # độ sáng = trung bình của từng pixel trong ảnh
             brightness = np.mean(image_gray)
             # độ tương phản = độ lệch chuẩn của từng pixel trong ảnh
@@ -99,13 +101,13 @@ class IndustrialEDA:
             contrast_list.append(contrast)
             blurrieness_list.append(laplacian_var)
             file_names.append(file_name)
-            
-            return {
-                "file_name": file_names,
-                "brightness": brightness_list,
-                "contrast": contrast_list,
-                "blurrieness": blurrieness_list
-            }
+        
+        return {
+            "file_name": file_names,
+            "brightness": brightness_list,
+            "contrast": contrast_list,
+            "blurrieness": blurrieness_list
+        }
 
     def plot_quality_distribution(self, metrics):
         fig, axes = plt.subplots(1, 3, figsize=(18, 5))
@@ -115,22 +117,73 @@ class IndustrialEDA:
         axes[0].set_xlabel("Giá trị trung bình pixel (0-255)")
         axes[0].set_ylabel("Số lượng ảnh")
 
-        axes[1].hist(metrics["contrast"], bins=20, color="gold", edgecolor="black")
+        axes[1].hist(metrics["contrast"], bins=20, color="green", edgecolor="black")
         axes[1].set_title("Phân phối độ tương phản")
         axes[1].set_xlabel("Độ tương phản")
         axes[1].set_ylabel("Số lượng ảnh")
 
-        axes[2].hist(metrics["blurrieness"], bins=20, color="gold", edgecolor="black")
+        axes[2].hist(metrics["blurrieness"], bins=20, color="red", edgecolor="black")
         axes[2].set_title("Phân phối độ mờ")
         axes[2].set_xlabel("Độ mờ")
         axes[2].set_ylabel("Số lượng ảnh")
         plt.show()
-            
+    
+    def get_low_quality_images(self, metrics, brightness_thress=(40, 220), blur_thress=100):
+        image_path = self.get_full_path()
+        bad_images = []
+        for i in range(len(metrics["file_name"])):
+            name = metrics["file_name"][i]
+            b = metrics["brightness"][i]
+            c = metrics["contrast"][i]
+            blur = metrics["blurrieness"][i]
+
+            reasons = []
+            if b < brightness_thress[0]: reasons.append(f"Quá tối: ({b: .1f})")
+            if b > brightness_thress[1]: reasons.append(f"Quá sáng: ({b: .1f})")
+            if blur < blur_thress: reasons.append(f"Bị mờ ({blur: .1f})")
+
+            if reasons:
+                bad_images.append({
+                    "file_name": name,
+                    "image_path": image_path.get(name),
+                    "reasons": ", ".join(reasons)
+                })
+        return bad_images
+    
+    def plot_spatial_heatmap(self, target_size=(640, 640)):
+        heatmap = np.zeros(target_size, dtype=np.float32)
+        img_size_map = {img["id"]: (img["width"], img["height"]) for img in self.coco_data["images"]}
+
+        for ann in self.coco_data["annotations"]:
+            x, y, w, h = ann["bbox"]
+            img_id = ann["image_id"]
+            if img_id not in img_size_map: continue
+
+            img_w, img_h = img_size_map[img_id]
+
+            x1 = int((x/img_w) * target_size[1])
+            y1 = int((y/img_h) * target_size[0])
+            x2 = int(((x + w)/img_w) * target_size[1])
+            y2 = int(((y+h)/img_h) * target_size[0])
+
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(target_size[1], x2), min(target_size[0], y2)
+
+            heatmap[y1:y2, x1:x2] +=1 
+        plt.figure(figsize=(8, 8))
+        plt.imshow(heatmap, cmap='jet')
+        plt.title("Bản đồ nhiệt phân bố vị trí lỗi")
+        plt.show()
 
 if __name__ == "__main__":
-    eda = IndustrialEDA("/Users/mac/Detect_Drill_Bit/mui_khoan/train/_annotations.coco.json", "/Users/mac/Detect_Drill_Bit/mui_khoan/train")
+    eda = IndustrialEDA(
+        "/Users/mac/Detect_Drill_Bit/mui_khoan/train/_annotations.coco.json",
+        "/Users/mac/Detect_Drill_Bit/mui_khoan/train"
+    )
     print("categories: ", eda.get_class_distribution())
-    # eda.visualize_some_images()
     print(eda.resolution_distribution())
     metrics = eda.analyze_image_quality()
+    eda.visualize_some_images()
     eda.plot_quality_distribution(metrics)
+    print(eda.get_low_quality_images(metrics))
+    eda.plot_spatial_heatmap()
