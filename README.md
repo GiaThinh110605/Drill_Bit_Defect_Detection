@@ -13,3 +13,6 @@
 
 ### Công nghệ sử dụng: 
 - python, pytorch, fast api, docker, react, CI/CD bằng github action, deploy lên hugging face
+
+### Tài liệu tham khảo:
+- Hướng dẫn chuyển đổi coco sang yolo: /Users/mac/Detect_Drill_Bit/original-data/train/_annotations.coco.json

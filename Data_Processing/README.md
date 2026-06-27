@@ -26,5 +26,33 @@
     - category_id (bất kỳ chỉ số nào)               chỉ số bắt đầu từ 0
     - các mảng đa giác trong trường segmentation    tọa độ đa giác sau ClassID
     - [x, y, visibilit...] theo pixel               [x, y, visibility, ...] đã chuẩn hóa
+- coco
+my_dataset/
+├── images/
+│   ├── train/
+│   │   ├── img_001.jpg
+│   │   ├── img_002.jpg
+│   │   └── ...
+│   └── val/
+│       ├── img_100.jpg
+│       └── ...
+└── annotations/
+    ├── instances_train.json
+    └── instances_val.json
 
+- yolo
 
+my_dataset/
+├── images/
+│   ├── train/
+│   │   ├── img_001.jpg
+│   │   └── ...
+│   └── val/
+│       └── ...
+├── labels/
+│   ├── train/
+│   │   ├── img_001.txt
+│   │   └── ...
+│   └── val/
+│       └── ...
+└── dataset.yaml

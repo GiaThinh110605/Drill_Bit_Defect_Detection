@@ -15,7 +15,7 @@ class IndustrialEDA:
             cat["id"]: cat["name"] for cat in self.coco_data["categories"]
         }
 
-    def get_class_distribution(self):
+    def get_and_visualize_class_distribution(self):
         cat_counts = {}
         for caterogies in self.coco_data['annotations']:
             cat_id = caterogies["category_id"]
@@ -23,6 +23,8 @@ class IndustrialEDA:
                 cat_counts[cat_id] += 1
             else:
                 cat_counts[cat_id] = 1
+        plt.bar(cat_counts.keys(), cat_counts.values())
+        plt.show()
             
         return cat_counts
     
@@ -177,10 +179,10 @@ class IndustrialEDA:
 
 if __name__ == "__main__":
     eda = IndustrialEDA(
-        "/Users/mac/Detect_Drill_Bit/mui_khoan/train/_annotations.coco.json",
-        "/Users/mac/Detect_Drill_Bit/mui_khoan/train"
+        "/Users/mac/Detect_Drill_Bit/original-data/train/_annotations.coco.json",
+        "/Users/mac/Detect_Drill_Bit/original-data/train"
     )
-    print("categories: ", eda.get_class_distribution())
+    eda.get_and_visualize_class_distribution()
     print(eda.resolution_distribution())
     metrics = eda.analyze_image_quality()
     eda.visualize_some_images()
