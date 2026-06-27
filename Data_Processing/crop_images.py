@@ -120,9 +120,38 @@ class CropImages:
             
 
 if __name__ == "__main__":
-    ANNO_PATH = "/Users/mac/Detect_Drill_Bit/mui_khoan/test/_annotations.coco.json"
-    IMAGE_DIR = "/Users/mac/Detect_Drill_Bit/mui_khoan/test"
-    OUTPUT_DIR = "/Users/mac/Detect_Drill_Bit/mui_khoan/test_preprocessed"
+    # Đường dẫn gốc tới thư mục mui_khoan
+    DATA_ROOT = "/Users/mac/Detect_Drill_Bit/mui_khoan"
     
-    preprocessor = CropImages(ANNO_PATH, IMAGE_DIR, OUTPUT_DIR)
-    preprocessor.crop_width_only()
+    # Chỉ định đích danh tập test cần quét
+    TARGET_SPLIT = "test"
+    split_dir = os.path.join(DATA_ROOT, TARGET_SPLIT)
+    
+    # Quét đệ quy tìm tất cả các nhóm con bên trong tập test (Bright_Field, Dark_Field, side, top...)
+    count_folder = 0
+    for root, dirs, files in os.walk(split_dir):
+        for file in files:
+            if file == "_annotations.coco.json":
+                count_folder += 1
+                # Đường dẫn file JSON hiện tại
+                anno_path = os.path.join(root, file)
+                # Thư mục ảnh chính là thư mục chứa file JSON đó
+                image_dir = root
+                
+                # Tự động map cấu trúc sang thư mục preprocessed tương ứng
+                # Ví dụ: mui_khoan/test/Dark_Field/side -> mui_khoan/test_preprocessed/Dark_Field/side
+                relative_path = os.path.relpath(root, DATA_ROOT)
+                path_parts = relative_path.split(os.sep)
+                path_parts[0] = f"{path_parts[0]}_preprocessed"
+                
+                output_dir = os.path.join(DATA_ROOT, *path_parts)
+                
+                print(f"\n[{count_folder}] Đang xử lý nhóm: {relative_path}")
+                print(f"   + Input JSON: {anno_path}")
+                print(f"   + Output Dir: {output_dir}")
+                
+                # Thực thi tiền xử lý cắt ảnh
+                preprocessor = CropImages(anno_path, image_dir, output_dir)
+                preprocessor.crop_width_only()
+
+    print(f"\n Hoàn thành! Đã quét và xử lý xong toàn bộ {count_folder} thư mục con của tập test.")
