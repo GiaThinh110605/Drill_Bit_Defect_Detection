@@ -10,6 +10,45 @@
 ## 🚀 Giới thiệu
 Dự án này tập trung vào việc giải quyết bài toán kiểm định chất lượng mũi khoan trong công nghiệp. Bằng việc phân tích dữ liệu hình ảnh (EDA) và áp dụng mô hình Deep Learning (YOLOv12), hệ thống có khả năng nhận diện chính xác các lỗi phổ biến trên mũi khoan, giúp tiết kiệm thời gian và nâng cao độ chính xác so với việc kiểm tra thủ công.
 
+## 📈 Dashboard đánh giá Models
+
+Dashboard dưới đây tổng hợp các kết quả đã lưu trong thư mục [`Models`](Models). Bảng **Training Results** lấy từ `runs/detect/train/results.csv` và chọn epoch tốt nhất theo `mAP@0.5:0.95`. Bảng **Notebook Evaluation / Inference** lấy từ output đã lưu trong các notebook, bao gồm cả FPS/latency khi notebook có đo tốc độ.
+
+### 🏆 Training Results từ `results.csv`
+
+| Rank | Model | Epochs | Best epoch | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | Final mAP@0.5:0.95 | Source |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 1 | `yolo_v9` | 100 | 61 | 0.785 | 0.723 | 0.753 | 0.797 | **0.449** | 0.437 | [`results.csv`](Models/yolo_v9/results/runs/detect/train/results.csv) |
+| 2 | `yolo_v12` | 100 | 50 | 0.762 | 0.730 | 0.746 | 0.784 | **0.430** | 0.400 | [`results.csv`](Models/yolo_v12/results/runs/detect/train/results.csv) |
+| 3 | `yolo_v8` | 100 | 43 | 0.816 | 0.704 | 0.756 | 0.791 | **0.430** | 0.405 | [`results.csv`](Models/yolo_v8/results/runs/detect/train/results.csv) |
+| 4 | `yolo_v26` | 100 | 47 | 0.732 | 0.754 | 0.743 | 0.778 | **0.430** | 0.408 | [`results.csv`](Models/yolo_v26/results/runs/detect/train/results.csv) |
+| 5 | `yolov12_300epochs` | 152 | 52 | 0.748 | 0.728 | 0.738 | 0.780 | **0.423** | 0.406 | [`results.csv`](Models/yolov12_300epochs/results/runs/detect/train/results.csv) |
+| 6 | `yolo_v11` | 100 | 53 | 0.781 | 0.732 | 0.756 | 0.791 | **0.422** | 0.404 | [`results.csv`](Models/yolo_v11/results/runs/detect/train/results.csv) |
+| 7 | `yolo_v10` | 100 | 63 | 0.753 | 0.694 | 0.722 | 0.755 | **0.412** | 0.391 | [`results.csv`](Models/yolo_v10/results/runs/detect/train/results.csv) |
+
+**Nhận xét nhanh:** `yolo_v9` đang có `mAP@0.5:0.95` tốt nhất trong các run có `results.csv` (`0.449`). `yolo_v26` có Recall cao nhất trong nhóm này (`0.754`), còn `yolo_v8` có Precision cao nhất (`0.816`).
+
+### ⚡ Notebook Evaluation / Inference
+
+| Model / Run | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | FPS | Latency | Source |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `QEDL-YOLOv12 Fusion (cpu)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 16.5 | 60.6 ms | [`notebook`](Models/hybrid_quantum_yolov12/cpu/hybrid_quantum.ipynb) |
+| `QEDL-YOLOv12 Fusion (gpu_T4_Kaggle)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 18.1 | 55.3 ms | [`notebook`](Models/hybrid_quantum_yolov12/gpu_T4_Kaggle/gpu.ipynb) |
+| `Hybrid YOLOv12 gốc (cpu)` | 0.803 | 0.754 | 0.776 | 0.811 | **0.443** | 18.7 | 53.6 ms | [`notebook`](Models/hybrid_quantum_yolov12/cpu/hybrid_quantum.ipynb) |
+| `Hybrid YOLOv12 gốc (gpu_T4_Kaggle)` | 0.803 | 0.754 | 0.778 | 0.811 | **0.443** | 60.3 | 16.6 ms | [`notebook`](Models/hybrid_quantum_yolov12/gpu_T4_Kaggle/gpu.ipynb) |
+| `yolo_v9` | 0.774 | 0.753 | 0.745 | 0.786 | **0.438** | 188.5 | 5.3 ms | [`notebook`](Models/yolo_v9/notebook112f18967c.ipynb) |
+| `yolo_v26` | 0.792 | 0.743 | 0.696 | 0.764 | **0.408** | 298.1 | 3.4 ms | [`notebook`](Models/yolo_v26/notebook99c8751bfe.ipynb) |
+| `yolov12_300epochs` | 0.779 | 0.752 | 0.742 | 0.754 | **0.406** | 193.9 | 5.2 ms | [`notebook`](Models/yolov12_300epochs/notebookc97904729c.ipynb) |
+| `yolo12_innerciou` | 0.799 | 0.722 | 0.750 | 0.750 | **0.406** | 196.4 | 5.1 ms | [`notebook`](Models/yolo12_innerciou/notebook58a0b72e7a.ipynb) |
+| `yolo_v8` | 0.768 | 0.737 | 0.692 | 0.775 | **0.405** | 223.6 | 4.5 ms | [`notebook`](Models/yolo_v8/notebookd929110b51.ipynb) |
+| `yolo_v11` | 0.783 | 0.729 | 0.714 | 0.776 | **0.404** | 227.4 | 4.4 ms | [`notebook`](Models/yolo_v11/notebook72a7dfe82a.ipynb) |
+| `yolov12_AHFIN` | 0.791 | 0.696 | 0.745 | 0.737 | **0.403** | 172.6 | 5.8 ms | [`notebook`](Models/yolov12_AHFIN/notebookdffa5385fe%20(2).ipynb) |
+| `yolo_v12` | 0.764 | 0.741 | 0.706 | 0.753 | **0.400** | 181.9 | 5.5 ms | [`notebook`](Models/yolo_v12/notebookce70d09836.ipynb) |
+| `yolo12_AHFIN_INNERCIOU` | 0.781 | 0.717 | 0.749 | 0.761 | **0.399** | 178.7 | 5.6 ms | [`notebook`](Models/yolo12_AHFIN_INNERCIOU/notebook344e3d24e2.ipynb) |
+| `yolo_v10` | 0.743 | 0.719 | 0.697 | 0.725 | **0.391** | 269.2 | 3.7 ms | [`notebook`](Models/yolo_v10/notebookb84e69e7e3.ipynb) |
+
+**Kết luận:** QEDL-YOLOv12 Fusion cho Recall và F1 cao nhất (`Recall = 0.850`, `F1 = 0.827`, `mAP@0.5:0.95 = 0.480`) nhưng tốc độ thấp hơn YOLO-only do chạy thêm HQNN/quantum classifier trên từng ROI. Nếu ưu tiên real-time, `yolo_v26` có FPS cao nhất trong các notebook đã đo (`298.1 FPS`), còn `Hybrid YOLOv12 gốc` trên T4 đạt `60.3 FPS` với `mAP@0.5 = 0.811`.
+
 ## 📊 Phân tích Dữ liệu (EDA) & Trực quan hóa
 Quá trình **Exploratory Data Analysis (EDA)** được thực hiện nhằm hiểu rõ phân phối của dữ liệu và các đặc trưng của từng loại lỗi trước khi tiến hành huấn luyện mô hình.
 
@@ -74,3 +113,4 @@ Quá trình **Exploratory Data Analysis (EDA)** được thực hiện nhằm hi
 - Slide fastapi: [Link tới file slide](https://canva.link/840ya322qx6ytve)
 - Slide deep learning: [Link tới file slide](https://canva.link/6xdb3n1gpijx1kw)
 - Quantum model: [Link tới file slide](https://canva.link/xbnml6xwiar58hc)
+- ultralytics custom Yolov12: [Link tới github](https://github.com/GiaThinh110605/ultralytics)
