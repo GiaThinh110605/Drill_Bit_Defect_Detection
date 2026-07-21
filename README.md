@@ -73,3 +73,4 @@ Quá trình **Exploratory Data Analysis (EDA)** được thực hiện nhằm hi
 - Hướng dẫn chuyển đổi dữ liệu COCO sang định dạng YOLO: [Link tới file json mẫu](original-data/train/_annotations.coco.json)
 - Slide fastapi: [Link tới file slide](https://canva.link/840ya322qx6ytve)
 - Slide deep learning: [Link tới file slide](https://canva.link/6xdb3n1gpijx1kw)
+- Quantum model: [Link tới file slide](https://canva.link/xbnml6xwiar58hc)
