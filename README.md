@@ -10,6 +10,44 @@
 ## 🚀 Giới thiệu
 Dự án này tập trung vào việc giải quyết bài toán kiểm định chất lượng mũi khoan trong công nghiệp. Bằng việc phân tích dữ liệu hình ảnh (EDA) và áp dụng mô hình Deep Learning (YOLOv12), hệ thống có khả năng nhận diện chính xác các lỗi phổ biến trên mũi khoan, giúp tiết kiệm thời gian và nâng cao độ chính xác so với việc kiểm tra thủ công.
 
+## 🧠 Kiến trúc Model & Custom Architecture
+
+Các kiến trúc custom được lưu trong thư mục [`architectures`](architectures) của project GitHub: [GiaThinh110605/Drill_Bit_Defect_Detection](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/).
+
+<div align="center">
+  <h3>YOLO Pipeline tổng quát</h3>
+  <img src="architectures/Yolo.png" width="850px" alt="YOLO object detection pipeline"/>
+</div>
+
+YOLO xử lý ảnh qua các bước chính: tiền xử lý, resize/normalize, trích xuất đặc trưng bằng CNN, detection head dự đoán bounding box/class/confidence, sau đó lọc bằng threshold và Non-Max Suppression để tạo nhãn cuối cùng.
+
+<div align="center">
+  <h3>YOLOv12 Baseline Architecture</h3>
+  <img src="architectures/yolov12.png" width="850px" alt="YOLOv12 baseline architecture"/>
+</div>
+
+YOLOv12 baseline gồm 3 phần chính: **Backbone** trích xuất đặc trưng bằng các khối `Conv`, `C3k2`, `A2C2f`; **Neck** hợp nhất đặc trưng đa tỉ lệ qua `Concat` và `Upsample`; **Head** phát hiện lỗi trên các scale khác nhau.
+
+<div align="center">
+  <h3>YOLOv12 + AHFIN Custom</h3>
+  <img src="architectures/yolov12_AHFIN.png" width="850px" alt="YOLOv12 AHFIN custom architecture"/>
+</div>
+
+Kiến trúc custom **YOLOv12-AHFIN** bổ sung các khối `AHFIN` vào Neck/Head để tăng khả năng hợp nhất đặc trưng đa tỉ lệ, đặc biệt hữu ích với lỗi nhỏ, vùng lỗi mờ hoặc lỗi có biên dạng phức tạp trên mũi khoan. Các output `P3`, `P4`, `P5` vẫn được đưa vào Detect head để giữ khả năng phát hiện ở nhiều kích thước vật thể.
+
+<div align="center">
+  <h3>Hybrid Quantum QEDL-YOLOv12</h3>
+  <img src="architectures/hybrid_quantum.png" width="900px" alt="QEDL YOLOv12 hybrid quantum architecture"/>
+</div>
+
+Kiến trúc **QEDL-YOLOv12** dùng YOLOv12 làm detector ban đầu, crop từng ROI từ bounding box, sau đó đưa ROI vào HQNN classifier. Nhánh HQNN gồm CNN feature extractor, quantum encoding, parameterized quantum circuit và classifier. Kết quả cuối được fusion bằng trung bình xác suất:
+
+```text
+P_final = 1/2 * (P_yolo + P_quantum)
+```
+
+Nhờ fusion, mô hình tăng Recall/F1 trong thí nghiệm, nhưng FPS giảm vì mỗi ROI cần thêm bước crop, preprocess và phân loại bằng HQNN.
+
 ## 📈 Dashboard đánh giá Models
 
 Dashboard dưới đây tổng hợp các kết quả đã lưu trong thư mục [`Models`](Models). Bảng **Training Results** lấy từ `runs/detect/train/results.csv` và chọn epoch tốt nhất theo `mAP@0.5:0.95`. Bảng **Notebook Evaluation / Inference** lấy từ output đã lưu trong các notebook, bao gồm cả FPS/latency khi notebook có đo tốc độ.
@@ -32,20 +70,20 @@ Dashboard dưới đây tổng hợp các kết quả đã lưu trong thư mục
 
 | Model / Run | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | FPS | Latency | Source |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| `QEDL-YOLOv12 Fusion (cpu)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 16.5 | 60.6 ms | [`notebook`](Models/hybrid_quantum_yolov12/cpu/hybrid_quantum.ipynb) |
-| `QEDL-YOLOv12 Fusion (gpu_T4_Kaggle)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 18.1 | 55.3 ms | [`notebook`](Models/hybrid_quantum_yolov12/gpu_T4_Kaggle/gpu.ipynb) |
-| `Hybrid YOLOv12 gốc (cpu)` | 0.803 | 0.754 | 0.776 | 0.811 | **0.443** | 18.7 | 53.6 ms | [`notebook`](Models/hybrid_quantum_yolov12/cpu/hybrid_quantum.ipynb) |
-| `Hybrid YOLOv12 gốc (gpu_T4_Kaggle)` | 0.803 | 0.754 | 0.778 | 0.811 | **0.443** | 60.3 | 16.6 ms | [`notebook`](Models/hybrid_quantum_yolov12/gpu_T4_Kaggle/gpu.ipynb) |
-| `yolo_v9` | 0.774 | 0.753 | 0.745 | 0.786 | **0.438** | 188.5 | 5.3 ms | [`notebook`](Models/yolo_v9/notebook112f18967c.ipynb) |
-| `yolo_v26` | 0.792 | 0.743 | 0.696 | 0.764 | **0.408** | 298.1 | 3.4 ms | [`notebook`](Models/yolo_v26/notebook99c8751bfe.ipynb) |
-| `yolov12_300epochs` | 0.779 | 0.752 | 0.742 | 0.754 | **0.406** | 193.9 | 5.2 ms | [`notebook`](Models/yolov12_300epochs/notebookc97904729c.ipynb) |
-| `yolo12_innerciou` | 0.799 | 0.722 | 0.750 | 0.750 | **0.406** | 196.4 | 5.1 ms | [`notebook`](Models/yolo12_innerciou/notebook58a0b72e7a.ipynb) |
-| `yolo_v8` | 0.768 | 0.737 | 0.692 | 0.775 | **0.405** | 223.6 | 4.5 ms | [`notebook`](Models/yolo_v8/notebookd929110b51.ipynb) |
-| `yolo_v11` | 0.783 | 0.729 | 0.714 | 0.776 | **0.404** | 227.4 | 4.4 ms | [`notebook`](Models/yolo_v11/notebook72a7dfe82a.ipynb) |
-| `yolov12_AHFIN` | 0.791 | 0.696 | 0.745 | 0.737 | **0.403** | 172.6 | 5.8 ms | [`notebook`](Models/yolov12_AHFIN/notebookdffa5385fe%20(2).ipynb) |
-| `yolo_v12` | 0.764 | 0.741 | 0.706 | 0.753 | **0.400** | 181.9 | 5.5 ms | [`notebook`](Models/yolo_v12/notebookce70d09836.ipynb) |
-| `yolo12_AHFIN_INNERCIOU` | 0.781 | 0.717 | 0.749 | 0.761 | **0.399** | 178.7 | 5.6 ms | [`notebook`](Models/yolo12_AHFIN_INNERCIOU/notebook344e3d24e2.ipynb) |
-| `yolo_v10` | 0.743 | 0.719 | 0.697 | 0.725 | **0.391** | 269.2 | 3.7 ms | [`notebook`](Models/yolo_v10/notebookb84e69e7e3.ipynb) |
+| `QEDL-YOLOv12 Fusion (result_cpu)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 16.5 | 60.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_cpu/hybrid_quantum.ipynb) |
+| `QEDL-YOLOv12 Fusion (result_gpu_T4_Kaggle)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 18.1 | 55.3 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_gpu_T4_Kaggle/gpu.ipynb) |
+| `Hybrid YOLOv12 gốc (result_cpu)` | 0.803 | 0.754 | 0.776 | 0.811 | **0.443** | 18.7 | 53.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_cpu/hybrid_quantum.ipynb) |
+| `Hybrid YOLOv12 gốc (result_gpu_T4_Kaggle)` | 0.803 | 0.754 | 0.778 | 0.811 | **0.443** | 60.3 | 16.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_gpu_T4_Kaggle/gpu.ipynb) |
+| `yolo_v9` | 0.774 | 0.753 | 0.745 | 0.786 | **0.438** | 188.5 | 5.3 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v9/notebook112f18967c.ipynb) |
+| `yolo_v26` | 0.792 | 0.743 | 0.696 | 0.764 | **0.408** | 298.1 | 3.4 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v26/notebook99c8751bfe.ipynb) |
+| `yolov12_300epochs` | 0.779 | 0.752 | 0.742 | 0.754 | **0.406** | 193.9 | 5.2 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolov12_300epochs/notebookc97904729c.ipynb) |
+| `yolo12_innerciou` | 0.799 | 0.722 | 0.750 | 0.750 | **0.406** | 196.4 | 5.1 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo12_innerciou/notebook58a0b72e7a.ipynb) |
+| `yolo_v8` | 0.768 | 0.737 | 0.692 | 0.775 | **0.405** | 223.6 | 4.5 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v8/notebookd929110b51.ipynb) |
+| `yolo_v11` | 0.783 | 0.729 | 0.714 | 0.776 | **0.404** | 227.4 | 4.4 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v11/notebook72a7dfe82a.ipynb) |
+| `yolov12_AHFIN` | 0.791 | 0.696 | 0.745 | 0.737 | **0.403** | 172.6 | 5.8 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolov12_AHFIN/notebookdffa5385fe%20%282%29.ipynb) |
+| `yolo_v12` | 0.764 | 0.741 | 0.706 | 0.753 | **0.400** | 181.9 | 5.5 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v12/notebookce70d09836.ipynb) |
+| `yolo12_AHFIN_INNERCIOU` | 0.781 | 0.717 | 0.749 | 0.761 | **0.399** | 178.7 | 5.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo12_AHFIN_INNERCIOU/notebook344e3d24e2.ipynb) |
+| `yolo_v10` | 0.743 | 0.719 | 0.697 | 0.725 | **0.391** | 269.2 | 3.7 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v10/notebookb84e69e7e3.ipynb) |
 
 **Kết luận:** QEDL-YOLOv12 Fusion cho Recall và F1 cao nhất (`Recall = 0.850`, `F1 = 0.827`, `mAP@0.5:0.95 = 0.480`) nhưng tốc độ thấp hơn YOLO-only do chạy thêm HQNN/quantum classifier trên từng ROI. Nếu ưu tiên real-time, `yolo_v26` có FPS cao nhất trong các notebook đã đo (`298.1 FPS`), còn `Hybrid YOLOv12 gốc` trên T4 đạt `60.3 FPS` với `mAP@0.5 = 0.811`.
 
