@@ -84,6 +84,12 @@ Các bước EDA chính:
         <br /><b>Scratched (Trầy xước)</b>
       </td>
     </tr>
+    <tr>
+      <td align="center">
+        <img src="EDA/visualize_errors/Chipped.png" width="300px;" alt="Tip Wear Defect"/>
+        <br /><b>Chipped (Sứt mẻ)</b>
+      </td>
+    </tr>
   </table>
 
   <h3>Phân phối và tương quan dữ liệu</h3>
