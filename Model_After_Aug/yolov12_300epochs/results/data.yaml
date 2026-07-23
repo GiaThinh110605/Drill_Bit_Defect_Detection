@@ -1,0 +1,17 @@
+
+path: /kaggle/input/datasets/lmgiathnh/final-dataset/final-dataset
+
+train: train/images
+val: val/images
+test: 
+    - test/Bright_Field/images
+    - test/Dark_Field/images
+
+nc: 5
+
+names:
+  - Broken
+  - Chipped
+  - Scratched
+  - Severe_Rust
+  - Tip_Wear
