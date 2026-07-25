@@ -92,6 +92,16 @@ Các bước EDA chính:
     </tr>
   </table>
 
+  <h3>Class Distribution</h3>
+  <table>
+    <tr>
+      <td align="center">
+        <img src="EDA/visualize_errors/check_balance.png" width="400px;" alt="Distribution"/>
+        <br /><b>Biểu đồ phân phối lỗi</b>
+      </td>
+    </tr>
+  </table>
+
   <h3>Phân phối và tương quan dữ liệu</h3>
   <table>
     <tr>

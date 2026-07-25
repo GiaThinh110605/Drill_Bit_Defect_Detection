@@ -17,16 +17,53 @@ class IndustrialEDA:
 
     def get_and_visualize_class_distribution(self):
         cat_counts = {}
-        for caterogies in self.coco_data['annotations']:
-            cat_id = caterogies["category_id"]
-            if cat_id in cat_counts:
-                cat_counts[cat_id] += 1
-            else:
-                cat_counts[cat_id] = 1
-        plt.bar(cat_counts.keys(), cat_counts.values())
+        for ann in self.coco_data['annotations']:
+            cat_id = ann["category_id"]
+            if cat_id == 0:
+                continue
+            yolo_id = cat_id - 1
+            cat_counts[yolo_id] = cat_counts.get(yolo_id, 0) + 1
+            
+        sorted_ids = sorted(cat_counts.keys())
+        counts = [cat_counts[i] for i in sorted_ids]
+        labels = [f"{i}: {self.categories.get(i + 1, 'Unknown')}" for i in sorted_ids]
+        
+        plt.figure(figsize=(10, 5))
+        plt.bar(labels, counts, color='skyblue', edgecolor='black')
+        plt.title("Phân phối các lớp khuyết tật (0-4)")
+        plt.xlabel("Lớp khuyết tật")
+        plt.ylabel("Số lượng mẫu")
+        plt.xticks(rotation=15)
+        plt.tight_layout()
         plt.show()
             
         return cat_counts
+    
+    def check_class_balance(self):
+        cat_counts = {}
+        for ann in self.coco_data['annotations']:
+            cat_id = ann["category_id"]
+            if cat_id == 0:
+                continue
+            yolo_id = cat_id - 1
+            cat_name = f"{yolo_id}: {self.categories.get(cat_id, 'Unknown')}"
+            cat_counts[cat_name] = cat_counts.get(cat_name, 0) + 1
+            
+        print("\n=== KIỂM TRA CÂN BẰNG DỮ LIỆU GỐC ===")
+        for name in sorted(cat_counts.keys()):
+            print(f"  {name}: {cat_counts[name]} instances")
+            
+        if cat_counts:
+            max_class = max(cat_counts, key=cat_counts.get)
+            min_class = min(cat_counts, key=cat_counts.get)
+            ratio = cat_counts[max_class] / cat_counts[min_class]
+            print(f"\nTỷ lệ mất cân bằng (Max/Min): {ratio:.2f} ({max_class} vs {min_class})")
+            if ratio < 3.0:
+                print("Đánh giá: Dữ liệu ở mức CÂN BẰNG TỐT (Tỷ lệ < 3:1).")
+            else:
+                print("Đánh giá: Dữ liệu ở mức MẤT CÂN BẰNG (Tỷ lệ >= 3:1). Cần cân nhắc augmentation thêm các lớp thiểu số.")
+        return cat_counts
+    
     
     def get_full_path(self):
         image_path = {}
@@ -183,6 +220,7 @@ if __name__ == "__main__":
         "/Users/mac/Detect_Drill_Bit/original-data/train"
     )
     eda.get_and_visualize_class_distribution()
+    eda.check_class_balance()
     print(eda.resolution_distribution())
     metrics = eda.analyze_image_quality()
     eda.visualize_some_images()
