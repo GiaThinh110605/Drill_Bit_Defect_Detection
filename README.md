@@ -2,7 +2,35 @@
   <h1>Drill Bit Defect Detection</h1>
   <p>Hệ thống phát hiện và phân loại lỗi trên mũi khoan bằng YOLO, kết hợp EDA, tiền xử lý dữ liệu, đánh giá model, API và giao diện Web.</p>
 
-  <img src="pipeline/pipeline.png" width="900px" alt="Pipeline tổng quan của hệ thống Drill Bit Defect Detection"/>
+  <h3>Pipeline 5 Giai Đoạn</h3>
+  <table>
+    <tr>
+      <td align="center">
+        <img src="pipeline/phase_1.png" width="400px;" alt="Giai đoạn 1: EDA, Tiền xử lý & Baseline"/>
+        <br /><b>Giai đoạn 1: EDA, Tiền xử lý & Baseline</b>
+      </td>
+      <td align="center">
+        <img src="pipeline/phase_2.png" width="400px;" alt="Giai đoạn 2: Phân tích lỗi (Data-Centric)"/>
+        <br /><b>Giai đoạn 2: Phân tích lỗi (Data-Centric)</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="pipeline/phase_3.png" width="400px;" alt="Giai đoạn 3: Tối ưu dữ liệu (Data Improvement)"/>
+        <br /><b>Giai đoạn 3: Tối ưu dữ liệu (Data Improvement)</b>
+      </td>
+      <td align="center">
+        <img src="pipeline/phase_4.png" width="400px;" alt="Giai đoạn 4: Cải tiến mô hình & Quantum"/>
+        <br /><b>Giai đoạn 4: Cải tiến mô hình & Quantum</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" colspan="2">
+        <img src="pipeline/phase_5.png" width="400px;" alt="Giai đoạn 5: Triển khai sản phẩm"/>
+        <br /><b>Giai đoạn 5: Triển khai sản phẩm</b>
+      </td>
+    </tr>
+  </table>
 </div>
 
 ---
@@ -211,7 +239,9 @@ Quá trình huấn luyện sử dụng transfer learning từ các model YOLO pr
 | `optimizer` | `AdamW` hoặc `SGD` |
 | `data` | [`final-dataset/data.yaml`](final-dataset/data.yaml) |
 
-Các model và notebook huấn luyện/đánh giá được lưu trong [`Models`](Models).
+Các model và notebook huấn luyện/đánh giá được lưu trong:
+- [`Models_Before_Handle_Data`](Models_Before_Handle_Data) - Models train trên dữ liệu chưa xử lý data leakage và các vấn đề từ EDA
+- [`Models_After_Handle_Data`](Models_After_Handle_Data) - Models train trên dữ liệu đã xử lý (anti-leakage, crop viền đen, enhance brightness) ⏳ *Đang cập nhật*
 
 ## 8. Đánh giá model
 
@@ -226,44 +256,61 @@ Sau khi train, model được đánh giá bằng các metric chính:
 | mAP@0.5:0.95 | Metric nghiêm ngặt hơn, trung bình trên nhiều ngưỡng IoU |
 | FPS / Latency | Tốc độ inference |
 
-### 8.1 Training results từ `results.csv`
+### 8.1 Models Before Handle Data (Baseline)
+
+Các model này được train trên dữ liệu gốc, chưa xử lý data leakage (38 ảnh trùng train-valid), chưa crop viền đen, chưa enhance brightness.
+
+#### 8.1.1 Training results từ `results.csv`
 
 Bảng này lấy từ `runs/detect/train/results.csv` và chọn epoch tốt nhất theo `mAP@0.5:0.95`.
 
 | Rank | Model | Epochs | Best epoch | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | Final mAP@0.5:0.95 | Source |
 |---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | `yolo_v9` | 100 | 61 | 0.785 | 0.723 | 0.753 | 0.797 | **0.449** | 0.437 | [`results.csv`](Models/yolo_v9/results/runs/detect/train/results.csv) |
-| 2 | `yolo_v12` | 100 | 50 | 0.762 | 0.730 | 0.746 | 0.784 | **0.430** | 0.400 | [`results.csv`](Models/yolo_v12/results/runs/detect/train/results.csv) |
-| 3 | `yolo_v8` | 100 | 43 | 0.816 | 0.704 | 0.756 | 0.791 | **0.430** | 0.405 | [`results.csv`](Models/yolo_v8/results/runs/detect/train/results.csv) |
-| 4 | `yolo_v26` | 100 | 47 | 0.732 | 0.754 | 0.743 | 0.778 | **0.430** | 0.408 | [`results.csv`](Models/yolo_v26/results/runs/detect/train/results.csv) |
-| 5 | `yolov12_300epochs` | 152 | 52 | 0.748 | 0.728 | 0.738 | 0.780 | **0.423** | 0.406 | [`results.csv`](Models/yolov12_300epochs/results/runs/detect/train/results.csv) |
-| 6 | `yolo_v11` | 100 | 53 | 0.781 | 0.732 | 0.756 | 0.791 | **0.422** | 0.404 | [`results.csv`](Models/yolo_v11/results/runs/detect/train/results.csv) |
-| 7 | `yolo_v10` | 100 | 63 | 0.753 | 0.694 | 0.722 | 0.755 | **0.412** | 0.391 | [`results.csv`](Models/yolo_v10/results/runs/detect/train/results.csv) |
+| 1 | `yolo_v9` | 100 | 61 | 0.785 | 0.723 | 0.753 | 0.797 | **0.449** | 0.437 | [`results.csv`](Models_Before_Handle_Data/yolo_v9/results/runs/detect/train/results.csv) |
+| 2 | `yolo_v12` | 100 | 50 | 0.762 | 0.730 | 0.746 | 0.784 | **0.430** | 0.400 | [`results.csv`](Models_Before_Handle_Data/yolo_v12/results/runs/detect/train/results.csv) |
+| 3 | `yolo_v8` | 100 | 43 | 0.816 | 0.704 | 0.756 | 0.791 | **0.430** | 0.405 | [`results.csv`](Models_Before_Handle_Data/yolo_v8/results/runs/detect/train/results.csv) |
+| 4 | `yolo_v26` | 100 | 47 | 0.732 | 0.754 | 0.743 | 0.778 | **0.430** | 0.408 | [`results.csv`](Models_Before_Handle_Data/yolo_v26/results/runs/detect/train/results.csv) |
+| 5 | `yolov12_300epochs` | 152 | 52 | 0.748 | 0.728 | 0.738 | 0.780 | **0.423** | 0.406 | [`results.csv`](Models_Before_Handle_Data/yolov12_300epochs/results/runs/detect/train/results.csv) |
+| 6 | `yolo_v11` | 100 | 53 | 0.781 | 0.732 | 0.756 | 0.791 | **0.422** | 0.404 | [`results.csv`](Models_Before_Handle_Data/yolo_v11/results/runs/detect/train/results.csv) |
+| 7 | `yolo_v10` | 100 | 63 | 0.753 | 0.694 | 0.722 | 0.755 | **0.412** | 0.391 | [`results.csv`](Models_Before_Handle_Data/yolo_v10/results/runs/detect/train/results.csv) |
 
 Nhận xét nhanh: `yolo_v9` có `mAP@0.5:0.95` tốt nhất trong các run có `results.csv` (`0.449`). `yolo_v26` có Recall cao nhất trong nhóm này (`0.754`), còn `yolo_v8` có Precision cao nhất (`0.816`).
 
-### 8.2 Notebook evaluation / inference
+#### 8.1.2 Notebook evaluation / inference
 
 Bảng này lấy từ output đã lưu trong các notebook, bao gồm FPS/latency khi notebook có đo tốc độ.
 
 | Model / Run | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | FPS | Latency | Source |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| `QEDL-YOLOv12 Fusion (result_cpu)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 16.5 | 60.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_cpu/hybrid_quantum.ipynb) |
-| `QEDL-YOLOv12 Fusion (result_gpu_T4_Kaggle)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 18.1 | 55.3 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_gpu_T4_Kaggle/gpu.ipynb) |
-| `Hybrid YOLOv12 gốc (result_cpu)` | 0.803 | 0.754 | 0.776 | 0.811 | **0.443** | 18.7 | 53.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_cpu/hybrid_quantum.ipynb) |
-| `Hybrid YOLOv12 gốc (result_gpu_T4_Kaggle)` | 0.803 | 0.754 | 0.778 | 0.811 | **0.443** | 60.3 | 16.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/hybrid_quantum_yolov12/result_gpu_T4_Kaggle/gpu.ipynb) |
-| `yolo_v9` | 0.774 | 0.753 | 0.745 | 0.786 | **0.438** | 188.5 | 5.3 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v9/notebook112f18967c.ipynb) |
-| `yolo_v26` | 0.792 | 0.743 | 0.696 | 0.764 | **0.408** | 298.1 | 3.4 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v26/notebook99c8751bfe.ipynb) |
-| `yolov12_300epochs` | 0.779 | 0.752 | 0.742 | 0.754 | **0.406** | 193.9 | 5.2 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolov12_300epochs/notebookc97904729c.ipynb) |
-| `yolo12_innerciou` | 0.799 | 0.722 | 0.750 | 0.750 | **0.406** | 196.4 | 5.1 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo12_innerciou/notebook58a0b72e7a.ipynb) |
-| `yolo_v8` | 0.768 | 0.737 | 0.692 | 0.775 | **0.405** | 223.6 | 4.5 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v8/notebookd929110b51.ipynb) |
-| `yolo_v11` | 0.783 | 0.729 | 0.714 | 0.776 | **0.404** | 227.4 | 4.4 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v11/notebook72a7dfe82a.ipynb) |
-| `yolov12_AHFIN` | 0.791 | 0.696 | 0.745 | 0.737 | **0.403** | 172.6 | 5.8 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolov12_AHFIN/notebookdffa5385fe%20%282%29.ipynb) |
-| `yolo_v12` | 0.764 | 0.741 | 0.706 | 0.753 | **0.400** | 181.9 | 5.5 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v12/notebookce70d09836.ipynb) |
-| `yolo12_AHFIN_INNERCIOU` | 0.781 | 0.717 | 0.749 | 0.761 | **0.399** | 178.7 | 5.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo12_AHFIN_INNERCIOU/notebook344e3d24e2.ipynb) |
-| `yolo_v10` | 0.743 | 0.719 | 0.697 | 0.725 | **0.391** | 269.2 | 3.7 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models/yolo_v10/notebookb84e69e7e3.ipynb) |
+| `QEDL-YOLOv12 Fusion (result_cpu)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 16.5 | 60.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/hybrid_quantum_yolov12/result_cpu/hybrid_quantum.ipynb) |
+| `QEDL-YOLOv12 Fusion (result_gpu_T4_Kaggle)` | 0.806 | 0.850 | 0.827 | 0.806 | **0.480** | 18.1 | 55.3 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/hybrid_quantum_yolov12/result_gpu_T4_Kaggle/gpu.ipynb) |
+| `Hybrid YOLOv12 gốc (result_cpu)` | 0.803 | 0.754 | 0.776 | 0.811 | **0.443** | 18.7 | 53.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/hybrid_quantum_yolov12/result_cpu/hybrid_quantum.ipynb) |
+| `Hybrid YOLOv12 gốc (result_gpu_T4_Kaggle)` | 0.803 | 0.754 | 0.778 | 0.811 | **0.443** | 60.3 | 16.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/hybrid_quantum_yolov12/result_gpu_T4_Kaggle/gpu.ipynb) |
+| `yolo_v9` | 0.774 | 0.753 | 0.745 | 0.786 | **0.438** | 188.5 | 5.3 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo_v9/notebook112f18967c.ipynb) |
+| `yolo_v26` | 0.792 | 0.743 | 0.696 | 0.764 | **0.408** | 298.1 | 3.4 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo_v26/notebook99c8751bfe.ipynb) |
+| `yolov12_300epochs` | 0.779 | 0.752 | 0.742 | 0.754 | **0.406** | 193.9 | 5.2 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolov12_300epochs/notebookc97904729c.ipynb) |
+| `yolo12_innerciou` | 0.799 | 0.722 | 0.750 | 0.750 | **0.406** | 196.4 | 5.1 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo12_innerciou/notebook58a0b72e7a.ipynb) |
+| `yolo_v8` | 0.768 | 0.737 | 0.692 | 0.775 | **0.405** | 223.6 | 4.5 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo_v8/notebookd929110b51.ipynb) |
+| `yolo_v11` | 0.783 | 0.729 | 0.714 | 0.776 | **0.404** | 227.4 | 4.4 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo_v11/notebook72a7dfe82a.ipynb) |
+| `yolov12_AHFIN` | 0.791 | 0.696 | 0.745 | 0.737 | **0.403** | 172.6 | 5.8 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolov12_AHFIN/notebookdffa5385fe%20%282%29.ipynb) |
+| `yolo_v12` | 0.764 | 0.741 | 0.706 | 0.753 | **0.400** | 181.9 | 5.5 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo_v12/notebookce70d09836.ipynb) |
+| `yolo12_AHFIN_INNERCIOU` | 0.781 | 0.717 | 0.749 | 0.761 | **0.399** | 178.7 | 5.6 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo12_AHFIN_INNERCIOU/notebook344e3d24e2.ipynb) |
+| `yolo_v10` | 0.743 | 0.719 | 0.697 | 0.725 | **0.391** | 269.2 | 3.7 ms | [`notebook`](https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/blob/main/Models_Before_Handle_Data/yolo_v10/notebookb84e69e7e3.ipynb) |
 
 Kết luận: QEDL-YOLOv12 Fusion cho Recall và F1 cao nhất (`Recall = 0.850`, `F1 = 0.827`, `mAP@0.5:0.95 = 0.480`) nhưng tốc độ thấp hơn YOLO-only do chạy thêm HQNN/quantum classifier trên từng ROI. Nếu ưu tiên real-time, `yolo_v26` có FPS cao nhất trong các notebook đã đo (`298.1 FPS`).
+
+### 8.2 Models After Handle Data (Clean Data)
+
+⏳ **Đang cập nhật** - Các model này được train trên dữ liệu đã xử lý:
+- ✅ Xóa 38 ảnh trùng train-valid (anti-leakage)
+- ✅ Crop viền đen
+- ✅ Tăng cường độ sáng/tương phản (CLAHE)
+
+| Rank | Model | Epochs | Best epoch | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | Final mAP@0.5:0.95 | Source |
+|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| - | - | - | - | - | - | - | - | **-** | - | - |
+
+> **Cập nhật sau khi train trên dữ liệu sạch**
 
 ## 9. Inference và phân tích lỗi
 
