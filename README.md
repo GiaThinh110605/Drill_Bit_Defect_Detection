@@ -143,6 +143,20 @@ Các bước EDA chính:
       </td>
     </tr>
   </table>
+
+  <h3>Visualize Dataset</h3>
+  <table>
+    <tr>
+      <td align="center">
+        <img src="Visualize_Dataset/images/objects_per_image.png" width="400px;" alt="Objects per image"/>
+        <br /><b>Số lượng object trên mỗi ảnh</b>
+      </td>
+      <td align="center">
+        <img src="Visualize_Dataset/images/random_image.png" width="400px;" alt="Random image with bbox"/>
+        <br /><b>Ảnh mẫu với bounding box</b>
+      </td>
+    </tr>
+  </table>
 </div>
 
 Chi tiết phần EDA nằm trong thư mục [`EDA`](EDA).
@@ -157,6 +171,7 @@ Các xử lý chính:
 |---|---|
 | COCO sang YOLO | Chuyển `_annotations.coco.json` thành file `.txt` theo format YOLO |
 | Chuẩn hóa bbox | Đưa tọa độ về dạng `class_id x_center y_center width height`, normalized từ 0 đến 1 |
+| Xóa ảnh trùng (Anti-Leakage) | Xóa 38 ảnh trùng giữa train-valid (check MD5 hash) để tránh overfitting |
 | Crop vùng lỗi | Cắt vùng quan trọng để tối ưu đầu vào và giảm nhiễu không cần thiết |
 | Chuẩn bị `data.yaml` | Khai báo đường dẫn train/val/test và danh sách class |
 
