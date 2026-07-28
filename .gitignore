@@ -1,4 +1,3 @@
 original-data/
-preprocessed-data/
-final-dataset/
-final-dataset-before-aug/
+data_convert_yolo_format/
+clean-data/
