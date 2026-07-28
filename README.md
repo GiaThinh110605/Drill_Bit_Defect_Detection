@@ -41,17 +41,15 @@ Dự án giải quyết bài toán kiểm định chất lượng mũi khoan tro
 
 Luồng triển khai của dự án được tổ chức theo đúng thứ tự:
 
-1. Phân tích dữ liệu ban đầu.
-2. Tiền xử lý và chuẩn hóa annotation.
-3. Tăng cường dữ liệu.
-4. Huấn luyện các mô hình YOLO.
-5. Nghiên cứu hướng custom architecture và hybrid quantum.
-6. Đánh giá, so sánh kết quả.
-7. Phân tích lỗi sau inference.
-8. Thử nghiệm mở rộng sau baseline: tiny defect, model distillation và quantum.
-9. Xây dựng API phục vụ inference.
-10. Xây dựng giao diện Web.
-11. Chuẩn bị đóng gói, triển khai và tài liệu tham khảo.
+1. **Phân tích dữ liệu (EDA)** - Hiểu phân phối class, kích thước bbox, kiểm tra data leakage, visualize dataset.
+2. **Tiền xử lý dữ liệu** - Chuyển COCO sang YOLO, xóa ảnh trùng (anti-leakage), crop viền đen, enhance brightness.
+3. **Train mô hình baseline** - Huấn luyện YOLOv12n baseline, inference và đánh giá để xác định lỗi sai ở đâu.
+4. **Cải thiện dữ liệu** - Oversampling class ít, augmentation (copy-paste, Mosaic, MixUp), hard example mining.
+5. **Train lại với dữ liệu mới** - Train baseline trên dữ liệu đã cải thiện, so sánh kết quả trước/sau để đánh giá hiệu quả.
+6. **Custom modules & Quantum** - Tối ưu model với custom architecture (AHFIN), nghiên cứu hybrid quantum (QEDL-YOLOv12), chưng cất model (sử dụng model lớn train cho model nhỏ).
+7. **Viết API inference** - Xây dựng FastAPI backend để phục vụ model qua REST API.
+8. **Xây dựng giao diện Web** - React + Vite frontend cho upload ảnh và hiển thị kết quả.
+9. **Đóng gói & Triển khai** - Docker, CI/CD, cloud deployment và tài liệu tham khảo.
 
 ## 2. Dữ liệu
 
