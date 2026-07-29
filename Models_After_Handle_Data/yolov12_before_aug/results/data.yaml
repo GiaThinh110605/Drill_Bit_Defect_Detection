@@ -1,0 +1,17 @@
+
+path: /kaggle/input/datasets/lmgiathnh/data-after-handle/data_convert_yolo_format
+
+train: train/images
+val: valid/images
+test: 
+  - test/Bright_Field/images
+  - test/Dark_Field/images
+
+nc: 5
+
+names:
+  - Broken
+  - Chipped
+  - Scratched
+  - Severe_Rust
+  - Tip_Wear
