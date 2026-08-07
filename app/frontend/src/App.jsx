@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { Upload, X, AlertCircle, RefreshCw } from 'lucide-react';
+import * as ort from 'onnxruntime-web';
 import './App.css'; // Optional if you have other styles, otherwise index.css handles it
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const MODEL_URL_AFTER = 'https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/releases/download/v1.0.0/best_after_aug_int8.onnx';
+const MODEL_URL_BEFORE = 'https://github.com/GiaThinh110605/Drill_Bit_Defect_Detection/releases/download/v1.0.0/best_before_aug_int8.onnx';
+const CLASSES = ["Broken", "Chipped", "Scratched", "Severe_Rust", "Tip_Wear"];
 
 function App() {
   const [mode, setMode] = useState('single'); // 'single' or 'compare'
@@ -14,9 +16,14 @@ function App() {
   const [error, setError] = useState(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [renderSize, setRenderSize] = useState({ width: 0, height: 0 });
+  const [modelLoading, setModelLoading] = useState(false);
 
   // Comparison mode state
   const [compareDetections, setCompareDetections] = useState({ before: [], after: [] });
+
+  // ONNX sessions
+  const sessionAfterRef = useRef(null);
+  const sessionBeforeRef = useRef(null);
 
   const imageRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -45,6 +52,104 @@ function App() {
       width: e.target.clientWidth,
       height: e.target.clientHeight
     });
+  };
+
+  // Load ONNX models
+  const loadModels = async () => {
+    if (sessionAfterRef.current && sessionBeforeRef.current) return;
+
+    setModelLoading(true);
+    try {
+      ort.env.wasm.numThreads = 1;
+      ort.env.wasm.simd = true;
+
+      if (!sessionAfterRef.current) {
+        sessionAfterRef.current = await ort.InferenceSession.create(MODEL_URL_AFTER, {
+          executionProviders: ['wasm']
+        });
+      }
+
+      if (!sessionBeforeRef.current) {
+        sessionBeforeRef.current = await ort.InferenceSession.create(MODEL_URL_BEFORE, {
+          executionProviders: ['wasm']
+        });
+      }
+    } catch (err) {
+      console.error('Error loading models:', err);
+      setError('Không thể tải models. Vui lòng thử lại.');
+    } finally {
+      setModelLoading(false);
+    }
+  };
+
+  // Preprocess image for ONNX model
+  const preprocessImage = (imgElement, inputSize = 640) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = inputSize;
+    canvas.height = inputSize;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgElement, 0, 0, inputSize, inputSize);
+    const imageData = ctx.getImageData(0, 0, inputSize, inputSize);
+    const input = new Float32Array(inputSize * inputSize * 3);
+
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      input[i / 4] = imageData.data[i] / 255.0; // R
+      input[i / 4 + inputSize * inputSize] = imageData.data[i + 1] / 255.0; // G
+      input[i / 4 + inputSize * inputSize * 2] = imageData.data[i + 2] / 255.0; // B
+    }
+
+    return input;
+  };
+
+  // Run inference
+  const runDetection = async (session, imgElement, originalSize) => {
+    const input = preprocessImage(imgElement);
+    const inputTensor = new ort.Tensor('float32', input, [1, 3, 640, 640]);
+
+    const outputs = await session.run({ images: inputTensor });
+    const output = outputs[Object.keys(outputs)[0]].data;
+
+    const detections = [];
+    const numClasses = CLASSES.length;
+    const numAnchors = 8400;
+
+    for (let i = 0; i < numAnchors; i++) {
+      const boxStart = i * 4;
+      const classStart = i * numClasses + 4 * numAnchors;
+
+      const x1 = output[boxStart];
+      const y1 = output[boxStart + 1];
+      const x2 = output[boxStart + 2];
+      const y2 = output[boxStart + 3];
+
+      let maxConf = 0;
+      let classId = 0;
+      for (let j = 0; j < numClasses; j++) {
+        const conf = output[classStart + j];
+        if (conf > maxConf) {
+          maxConf = conf;
+          classId = j;
+        }
+      }
+
+      if (maxConf > 0.25) {
+        const h = originalSize.height;
+        const w = originalSize.width;
+        detections.push({
+          box: [
+            (x1 / 640) * w,
+            (y1 / 640) * h,
+            (x2 / 640) * w,
+            (y2 / 640) * h
+          ],
+          conf: maxConf,
+          class_id: classId,
+          class_name: CLASSES[classId] || "Unknown"
+        });
+      }
+    }
+
+    return detections;
   };
 
   const handleFileChange = (e) => {
@@ -88,27 +193,36 @@ function App() {
     setLoading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('file_name', file); // 'file_name' matching FastAPI parameter
+    // Load models if not loaded
+    await loadModels();
 
     try {
+      const imgElement = new Image();
+      imgElement.src = preview;
+      await new Promise((resolve) => {
+        imgElement.onload = resolve;
+      });
+
       if (mode === 'compare') {
-        const response = await axios.post('/api/compare', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        if (!sessionAfterRef.current || !sessionBeforeRef.current) {
+          throw new Error('Models not loaded');
+        }
+        const detectionsBefore = await runDetection(sessionBeforeRef.current, imgElement, imageSize);
+        const detectionsAfter = await runDetection(sessionAfterRef.current, imgElement, imageSize);
         setCompareDetections({
-          before: response.data.before_aug,
-          after: response.data.after_aug
+          before: detectionsBefore,
+          after: detectionsAfter
         });
       } else {
-        const response = await axios.post('/api/predict', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        setDetections(response.data);
+        if (!sessionAfterRef.current) {
+          throw new Error('Model not loaded');
+        }
+        const detections = await runDetection(sessionAfterRef.current, imgElement, imageSize);
+        setDetections(detections);
       }
     } catch (err) {
       console.error(err);
-      setError('Đã xảy ra lỗi khi phân tích ảnh. Vui lòng kiểm tra server FastAPI.');
+      setError('Đã xảy ra lỗi khi phân tích ảnh. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
