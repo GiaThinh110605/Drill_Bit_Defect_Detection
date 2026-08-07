@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import cv2
 import numpy as np
+import os
 from ultralytics import YOLO
 
 app = FastAPI()
@@ -15,15 +16,16 @@ app.add_middleware(
 )
 
 
-model = YOLO("/Users/mac/Detect_Drill_Bit/Models/yolo_v12/results/runs/detect/train/weights/best.pt")
+# Load both models with relative paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH_AFTER = os.path.join(BASE_DIR, "models/best_after_aug.pt")
+MODEL_PATH_BEFORE = os.path.join(BASE_DIR, "models/best_before_aug.pt")
+
+model_after_aug = YOLO(MODEL_PATH_AFTER)
+model_before_aug = YOLO(MODEL_PATH_BEFORE)
 CLASSES = ["Broken", "Chipped", "Scratched", "Severe_Rust", "Tip_Wear"]
 
-@app.post("/predict")
-async def predict_image(file_name: UploadFile):
-    img = await file_name.read()
-    array_1d = np.frombuffer(img, np.uint8)
-    img = cv2.imdecode(array_1d, cv2.IMREAD_COLOR)
-    
+def run_detection(model, img):
     detections = []
     results = model(img)
     for result in results:
@@ -38,5 +40,27 @@ async def predict_image(file_name: UploadFile):
                 "class_id": class_id,
                 "class_name": class_name
             })
-
     return detections
+
+@app.post("/predict")
+async def predict_image(file_name: UploadFile):
+    img = await file_name.read()
+    array_1d = np.frombuffer(img, np.uint8)
+    img = cv2.imdecode(array_1d, cv2.IMREAD_COLOR)
+    
+    detections = run_detection(model_after_aug, img)
+    return detections
+
+@app.post("/compare")
+async def compare_models(file_name: UploadFile):
+    img = await file_name.read()
+    array_1d = np.frombuffer(img, np.uint8)
+    img = cv2.imdecode(array_1d, cv2.IMREAD_COLOR)
+    
+    detections_before = run_detection(model_before_aug, img)
+    detections_after = run_detection(model_after_aug, img)
+    
+    return {
+        "before_aug": detections_before,
+        "after_aug": detections_after
+    }
