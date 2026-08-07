@@ -20,3 +20,5 @@ Visualize_Dataset/
 evaluate_dataset/
 pipeline/
 architectures/
+# Allow ONNX models in backend
+!app/backend/models/*.onnx

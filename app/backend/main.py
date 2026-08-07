@@ -20,10 +20,10 @@ app.add_middleware(
 )
 
 
-# Load both models with relative paths
+# Load both models with relative paths (using ONNX for memory efficiency)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH_AFTER = os.path.join(BASE_DIR, "models/best_after_aug.pt")
-MODEL_PATH_BEFORE = os.path.join(BASE_DIR, "models/best_before_aug.pt")
+MODEL_PATH_AFTER = os.path.join(BASE_DIR, "models/best_after_aug.onnx")
+MODEL_PATH_BEFORE = os.path.join(BASE_DIR, "models/best_before_aug.onnx")
 
 # Lazy load models to avoid startup issues
 model_after_aug = None
