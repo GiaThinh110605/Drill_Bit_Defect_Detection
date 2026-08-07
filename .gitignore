@@ -5,3 +5,7 @@ Hard_Exampling/analysis/
 Hard_Exampling/val-8/
 Hard_Exampling/analysis-valid
 Hard_Exampling/analysis-train/
+.vercel
+.env*
+*.pt
+Research/*.pdf

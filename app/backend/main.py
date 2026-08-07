@@ -25,9 +25,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH_AFTER = os.path.join(BASE_DIR, "models/best_after_aug.pt")
 MODEL_PATH_BEFORE = os.path.join(BASE_DIR, "models/best_before_aug.pt")
 
-model_after_aug = YOLO(MODEL_PATH_AFTER)
-model_before_aug = YOLO(MODEL_PATH_BEFORE)
+# Lazy load models to avoid startup issues
+model_after_aug = None
+model_before_aug = None
 CLASSES = ["Broken", "Chipped", "Scratched", "Severe_Rust", "Tip_Wear"]
+
+def get_models():
+    global model_after_aug, model_before_aug
+    if model_after_aug is None:
+        model_after_aug = YOLO(MODEL_PATH_AFTER)
+    if model_before_aug is None:
+        model_before_aug = YOLO(MODEL_PATH_BEFORE)
+    return model_after_aug, model_before_aug
 
 def run_detection(model, img):
     detections = []
@@ -52,7 +61,8 @@ async def predict_image(file_name: UploadFile):
     array_1d = np.frombuffer(img, np.uint8)
     img = cv2.imdecode(array_1d, cv2.IMREAD_COLOR)
     
-    detections = run_detection(model_after_aug, img)
+    model_after, _ = get_models()
+    detections = run_detection(model_after, img)
     return detections
 
 @app.post("/compare")
@@ -61,8 +71,9 @@ async def compare_models(file_name: UploadFile):
     array_1d = np.frombuffer(img, np.uint8)
     img = cv2.imdecode(array_1d, cv2.IMREAD_COLOR)
     
-    detections_before = run_detection(model_before_aug, img)
-    detections_after = run_detection(model_after_aug, img)
+    model_before, model_after = get_models()
+    detections_before = run_detection(model_before, img)
+    detections_after = run_detection(model_after, img)
     
     return {
         "before_aug": detections_before,
