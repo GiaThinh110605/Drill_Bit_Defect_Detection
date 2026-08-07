@@ -21,4 +21,4 @@ evaluate_dataset/
 pipeline/
 architectures/
 # Allow ONNX models in backend
-!app/backend/models/*.onnx
+!app/backend/models/*_int8.onnx

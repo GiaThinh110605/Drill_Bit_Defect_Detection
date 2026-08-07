@@ -28,10 +28,10 @@ CLASSES = ["Broken", "Chipped", "Scratched", "Severe_Rust", "Tip_Wear"]
 def get_models():
     global model_after_aug, model_before_aug
     if model_after_aug is None:
-        model_path = os.path.join(os.path.dirname(__file__), "../app/backend/models/best_after_aug.onnx")
+        model_path = os.path.join(os.path.dirname(__file__), "../app/backend/models/best_after_aug_int8.onnx")
         model_after_aug = YOLO(model_path)
     if model_before_aug is None:
-        model_path = os.path.join(os.path.dirname(__file__), "../app/backend/models/best_before_aug.onnx")
+        model_path = os.path.join(os.path.dirname(__file__), "../app/backend/models/best_before_aug_int8.onnx")
         model_before_aug = YOLO(model_path)
     return model_after_aug, model_before_aug
 
