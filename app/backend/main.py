@@ -7,6 +7,10 @@ from ultralytics import YOLO
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {"message": "Drill Bit Defect Detection API", "endpoints": ["/predict", "/compare"]}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins
