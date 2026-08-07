@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Upload, X, AlertCircle, RefreshCw } from 'lucide-react';
 import './App.css'; // Optional if you have other styles, otherwise index.css handles it
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 function App() {
   const [mode, setMode] = useState('single'); // 'single' or 'compare'
   const [file, setFile] = useState(null);
@@ -91,7 +93,7 @@ function App() {
 
     try {
       if (mode === 'compare') {
-        const response = await axios.post('http://localhost:8000/compare', formData, {
+        const response = await axios.post(`${API_URL}/compare`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setCompareDetections({
@@ -99,7 +101,7 @@ function App() {
           after: response.data.after_aug
         });
       } else {
-        const response = await axios.post('http://localhost:8000/predict', formData, {
+        const response = await axios.post(`${API_URL}/predict`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setDetections(response.data);
