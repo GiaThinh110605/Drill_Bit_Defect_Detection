@@ -1,0 +1,3 @@
+[tool.vercel]
+# Disable Python detection - this is a frontend-only project
+pythonEnabled = false
