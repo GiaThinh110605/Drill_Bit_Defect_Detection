@@ -1,0 +1,8 @@
+type,count
+TP,745
+FalsePositive,185
+FalseNegative,144
+Duplicate,54
+Localization,46
+Both,13
+Classification,11

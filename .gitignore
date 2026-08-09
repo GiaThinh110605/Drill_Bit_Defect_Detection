@@ -10,15 +10,5 @@ Hard_Exampling/analysis-train/
 *.pt
 Research/*.pdf
 Models_*/
-Data_Processing/
-EDA/
-HandleLabel/
-Hard_Exampling/
-Models_After_Handle_Data/
-Models_Before_Handle_Data/
-Visualize_Dataset/
-evaluate_dataset/
-pipeline/
-architectures/
 # Allow ONNX models in backend
 !app/backend/models/*_int8.onnx
