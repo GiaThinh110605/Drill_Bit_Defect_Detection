@@ -46,7 +46,7 @@ Luồng triển khai của dự án được tổ chức theo đúng thứ tự:
 3. **Train mô hình baseline** - Huấn luyện YOLOv12n baseline, inference và đánh giá để xác định lỗi sai ở đâu.
 4. **Cải thiện dữ liệu** - Oversampling class ít, augmentation (copy-paste, Mosaic, MixUp), hard example mining.
 5. **Train lại với dữ liệu mới** - Train baseline trên dữ liệu đã cải thiện, so sánh kết quả trước/sau để đánh giá hiệu quả.
-6. **Custom modules & Quantum** - Tối ưu model với custom architecture (AHFIN), nghiên cứu hybrid quantum (QEDL-YOLOv12), chưng cất model (sử dụng model lớn train cho model nhỏ).
+6. **Custom modules & Quantum** - Tối ưu model với custom architecture (CARAFE, DySample), nghiên cứu hybrid quantum (QEDL-YOLOv12), chưng cất model (sử dụng model lớn train cho model nhỏ).
 7. **Viết API inference** - Xây dựng FastAPI backend để phục vụ model qua REST API.
 8. **Xây dựng giao diện Web** - React + Vite frontend cho upload ảnh và hiển thị kết quả.
 9. **Đóng gói & Triển khai** - Docker, CI/CD, cloud deployment và tài liệu tham khảo.
@@ -216,15 +216,33 @@ YOLOv12 baseline gồm 3 phần chính:
 | Neck | Hợp nhất đặc trưng đa tỉ lệ bằng `Concat` và `Upsample` |
 | Head | Phát hiện lỗi trên nhiều scale khác nhau |
 
-### 6.3 YOLOv12-AHFIN custom
+### 6.3 YOLOv12-CARAFE
 
 <div align="center">
-  <img src="architectures/yolov12_AHFIN.png" width="850px" alt="YOLOv12 AHFIN custom architecture"/>
+  <img src="architectures/carafe.png" width="850px" alt="CARAFE custom upsampling architecture"/>
 </div>
 
-Kiến trúc custom **YOLOv12-AHFIN** bổ sung các khối `AHFIN` vào Neck/Head để tăng khả năng hợp nhất đặc trưng đa tỉ lệ. Hướng này đặc biệt phù hợp với lỗi nhỏ, vùng lỗi mờ hoặc lỗi có biên dạng phức tạp trên mũi khoan.
+Kiến trúc **CARAFE** (Content-Aware Reassembly of FEatures) là module upsampling tùy chỉnh thay thế các phương pháp upsampling truyền thống như bilinear interpolation. CARAFE sử dụng kernel học được để tái hợp nhất các đặc trưng theo cách nhận thức nội dung, giúp cải thiện chất lượng đặc trưng ở các scale cao hơn.
 
-### 6.4 Hybrid Quantum QEDL-YOLOv12
+Đặc điểm chính:
+- **Content-aware**: Kernel upsampling được học từ đặc trưng của chính ảnh
+- **Lightweight**: Ít tham số hơn các phương pháp upsampling phức tạp
+- **Hiệu quả**: Cải thiện mAP cho các lỗi nhỏ và vùng lỗi mờ
+
+### 6.4 YOLOv12-DySample
+
+<div align="center">
+  <img src="architectures/dysample.png" width="850px" alt="DySample dynamic upsampling architecture"/>
+</div>
+
+Kiến trúc **DySample** là module upsampling động dựa trên sampling point learning. Thay vì dùng kernel cố định, DySample học cách sinh ra các điểm sampling động dựa trên nội dung đặc trưng, giúp tăng tính linh hoạt trong việc tái tạo chi tiết.
+
+Đặc điểm chính:
+- **Dynamic sampling**: Điểm sampling được sinh ra động theo nội dung
+- **Multi-scale**: Hỗ trợ upsampling ở nhiều tỉ lệ khác nhau
+- **Efficient**: Tối ưu hóa tính toán cho real-time inference
+
+### 6.5 Hybrid Quantum QEDL-YOLOv12
 
 <div align="center">
   <img src="architectures/hybrid_quantum.png" width="900px" alt="QEDL YOLOv12 hybrid quantum architecture"/>
