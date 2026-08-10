@@ -7,8 +7,5 @@ Hard_Exampling/analysis-valid
 Hard_Exampling/analysis-train/
 .vercel
 .env*
-*.pt
-Research/*.pdf
-Models_*/
 # Allow ONNX models in backend
 !app/backend/models/*_int8.onnx
