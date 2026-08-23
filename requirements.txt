@@ -4,3 +4,4 @@ ultralytics
 gradio
 opencv-python-headless
 numpy
+spaces
