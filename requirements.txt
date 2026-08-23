@@ -1,9 +1,6 @@
-fastapi
-uvicorn
-python-multipart
-opencv-python
-numpy
+torch
+torchvision
 ultralytics
-httpx
-onnxruntime
-onnxslim
+gradio
+opencv-python-headless
+numpy
