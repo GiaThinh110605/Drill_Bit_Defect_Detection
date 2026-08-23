@@ -1,36 +1,20 @@
+---
+title: Drill Bit Detection
+emoji: 🛠️
+colorFrom: blue
+colorTo: green
+sdk: gradio
+app_file: app.py
+pinned: false
+---
+Link deploy: https://huggingface.co/spaces/Thinh11062005/Drill_Bit_Detection
 <div align="center">
   <h1>Drill Bit Defect Detection</h1>
   <p>Hệ thống phát hiện và phân loại lỗi trên mũi khoan bằng YOLO, kết hợp EDA, tiền xử lý dữ liệu, đánh giá model, API và giao diện Web.</p>
 
-  <h3>Pipeline 5 Giai Đoạn</h3>
-  <table>
-    <tr>
-      <td align="center">
-        <img src="pipeline/phase_1.png" width="400px;" alt="Giai đoạn 1: EDA, Tiền xử lý & Baseline"/>
-        <br /><b>Giai đoạn 1: EDA, Tiền xử lý & Baseline</b>
-      </td>
-      <td align="center">
-        <img src="pipeline/phase_2.png" width="400px;" alt="Giai đoạn 2: Phân tích lỗi (Data-Centric)"/>
-        <br /><b>Giai đoạn 2: Phân tích lỗi (Data-Centric)</b>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="pipeline/phase_3.png" width="400px;" alt="Giai đoạn 3: Tối ưu dữ liệu (Data Improvement)"/>
-        <br /><b>Giai đoạn 3: Tối ưu dữ liệu (Data Improvement)</b>
-      </td>
-      <td align="center">
-        <img src="pipeline/phase_4.png" width="400px;" alt="Giai đoạn 4: Cải tiến mô hình & Quantum"/>
-        <br /><b>Giai đoạn 4: Cải tiến mô hình & Quantum</b>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" colspan="2">
-        <img src="pipeline/phase_5.png" width="400px;" alt="Giai đoạn 5: Triển khai sản phẩm"/>
-        <br /><b>Giai đoạn 5: Triển khai sản phẩm</b>
-      </td>
-    </tr>
-  </table>
+  <h3>Quy trình tổng thể</h3>
+  <img src="pipeline/quy_trinh.png" width="800px;" alt="Quy trình 5 Giai Đoạn"/>
+
 </div>
 
 ---
@@ -89,34 +73,7 @@ Các bước EDA chính:
 
 <div align="center">
   <h3>Các loại lỗi trên mũi khoan</h3>
-  <table>
-    <tr>
-      <td align="center">
-        <img src="EDA/visualize_errors/Broken.png" width="300px;" alt="Broken Defect"/>
-        <br /><b>Broken (Gãy)</b>
-      </td>
-      <td align="center">
-        <img src="EDA/visualize_errors/Serve_Rust.png" width="300px;" alt="Severe Rust Defect"/>
-        <br /><b>Severe Rust (Rỉ sét nặng)</b>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="EDA/visualize_errors/Tip_Wear.png" width="300px;" alt="Tip Wear Defect"/>
-        <br /><b>Tip Wear (Mòn đầu)</b>
-      </td>
-      <td align="center">
-        <img src="EDA/visualize_errors/scratched.png" width="300px;" alt="Scratched Defect"/>
-        <br /><b>Scratched (Trầy xước)</b>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="EDA/visualize_errors/Chipped.png" width="300px;" alt="Tip Wear Defect"/>
-        <br /><b>Chipped (Sứt mẻ)</b>
-      </td>
-    </tr>
-  </table>
+  <img src="EDA/visualize_errors/Cac_Loai_Loi.png" alt="Error types"/>
 
   <h3>Class Distribution</h3>
   <table>
@@ -332,16 +289,37 @@ Kết luận: QEDL-YOLOv12 Fusion cho Recall và F1 cao nhất (`Recall = 0.850`
 
 ### 8.2 Models After Handle Data (Clean Data)
 
-⏳ **Đang cập nhật** - Các model này được train trên dữ liệu đã xử lý:
-- ✅ Xóa 38 ảnh trùng train-valid (anti-leakage)
-- ✅ Crop viền đen
-- ✅ Tăng cường độ sáng/tương phản (CLAHE)
+Các model này được huấn luyện trên dữ liệu đã được làm sạch và áp dụng các kỹ thuật cải tiến (tăng cường dữ liệu, thay đổi kiến trúc upsample, và hybrid quantum).
 
-| Rank | Model | Epochs | Best epoch | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 | Final mAP@0.5:0.95 | Source |
-|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| - | - | - | - | - | - | - | - | **-** | - | - |
+**Tổng hợp kết quả thực nghiệm:**
 
-> **Cập nhật sau khi train trên dữ liệu sạch**
+| Model | mAP@0.5 | mAP@0.5:0.95 | Recall | F1-score |
+|---|---|---|---|---|
+| YOLOv12n (Baseline) | 78.1% | - | 73.8% | - |
+| YOLOv12n + Augmented Dataset | 80.4% | - | - | - |
+| YOLOv12n + Augmented + DySample | 79.5% | (Tăng nhẹ) | - | - |
+| YOLOv12n + Augmented + CARAFE | 81.4% | - | 76.4% | - |
+| **YOLOv12n + Augmented + HQNN** | **86.8%** | **59.4%** | **82.4%** | **0.845** |
+
+**Đánh giá chi tiết:**
+- **Tăng cường dữ liệu (Augmentation):** Sử dụng Mosaic, MixUp, Random Erasing giúp cải thiện khả năng tổng quát hóa, nâng mAP@0.5 từ 78.1% lên 80.4% mà không làm thay đổi số lượng tham số.
+- **Cải tiến kiến trúc (CARAFE & DySample):** Module CARAFE cho thấy hiệu quả rõ rệt khi tái tạo đặc trưng không gian, giúp mAP@0.5 đạt 81.4% và Recall lên 76.4%. Trong khi đó, DySample chưa mang lại hiệu quả vượt trội (mAP@0.5 giảm nhẹ).
+- **Mô hình Hybrid Quantum (HQNN):** Kết hợp YOLOv12n với mạng nơ-ron lai lượng tử mang lại kết quả tốt nhất. Các chỉ số đều tăng mạnh: mAP@0.5 tăng 8.7%, mAP@0.5:0.95 tăng 17.6%. Đồng thời, số lượng tham số chỉ tăng rất nhẹ (từ 2.569M lên 2.594M), đảm bảo mô hình vẫn gọn nhẹ và tối ưu.
+
+### Biểu đồ đánh giá huấn luyện
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="Models_After_Handle_Data/yolov12_before_aug/results/runs/detect/train/results.png" width="400px;" alt="YOLOv12n Baseline"/>
+      <br /><b>YOLOv12n (Baseline)</b>
+    </td>
+    <td align="center">
+      <img src="Models_After_Handle_Data/yolov12_after_aug/results/runs/detect/train/results.png" width="400px;" alt="YOLOv12n + Augmented Dataset"/>
+      <br /><b>YOLOv12n + Augmented Dataset</b>
+    </td>
+  </tr>
+</table>
 
 ## 9. Inference và phân tích lỗi
 
