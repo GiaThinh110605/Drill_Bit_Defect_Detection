@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pillow
+numpy
+ultralytics
+opencv-python-headless
+python-multipart
+onnx
+onnxruntime

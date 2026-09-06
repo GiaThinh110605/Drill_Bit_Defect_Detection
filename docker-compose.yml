@@ -1,0 +1,21 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: app/backend/Dockerfile
+    container_name: drill-bit-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: app/frontend/Dockerfile
+    container_name: drill-bit-frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+    restart: unless-stopped
